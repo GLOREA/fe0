@@ -13,13 +13,14 @@ class Skill {
             switch($match[1]) {
                 case 'attack' :
                     $this->type = 'AttackSupport';
+                    $this->sub_types[] = 'AttackSymbol';
                     break;
                 case 'deffence' :
                     $this->type = 'DeffenceSupport';
+                    $this->sub_types[] = 'DeffenceSymbol';
                     break;
             }
             $this->name = $match[2];
-            $this->sub_types[] = 'Symbol';
         }else{
             $this->name = $text;
         }
@@ -31,14 +32,14 @@ class Skill {
             switch($match[1]) {
                 case 'attack' :
                     $this->type = 'AttackSupport';
+                    $this->sub_types[] = 'AttackSymbol';
+                    $this->effect = $match[2];
                     break;
                 case 'deffence' :
                     $this->type = 'DeffenceSupport';
+                    $this->sub_types[] = 'DeffenceSymbol';
+                    $this->effect = $match[2];
                     break;
-            }
-            if($this->type){
-                $this->sub_types[] = 'Symbol';
-                $this->effect = $match[2];
             }
         }
 

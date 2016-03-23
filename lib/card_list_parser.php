@@ -22,6 +22,7 @@ break;
         foreach($html->find('td[class=cell_img]') as $id => $td){
             $card = new Card($td->find('a', 0)->href, $td->find('img', 0)->src);
             var_dump($card);
+            $card->save();
         }
         $html->clear();
         unset($html);

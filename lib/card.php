@@ -1,8 +1,21 @@
 <?php
 require_once dirname(__FILE__) . '/simple_html_dom.php';
 require_once dirname(__FILE__) . '/skill.php';
+require_once dirname(__FILE__) . '/arm.php';
+require_once dirname(__FILE__) . '/illustrator.php';
+require_once dirname(__FILE__) . '/rarity.php';
+require_once dirname(__FILE__) . '/symbol.php';
+require_once dirname(__FILE__) . '/sex.php';
+require_once dirname(__FILE__) . '/unit_class.php';
+require_once dirname(__FILE__) . '/warrior.php';
+require_once dirname(__FILE__) . '/type.php';
+require_once dirname(__FILE__) . '/unit.php';
 
-class Card {
+class Card extends MasterBase  {
+    static protected $table_name = 'cards';
+    static protected $find_key = 'name';
+    static protected $cache = null;
+
     function __construct($url, $mini_image_src = null){
         $this->url = $url;
         $this->mini_image_src = $mini_image_src;
@@ -46,7 +59,7 @@ class Card {
                     $this->status = $this->str2int($dl->find('dd', 0)->plaintext);
                     break;
                 case 'クラス' :
-                    $this->class = $dl->find('dd', 0)->plaintext;
+                    $this->unit_class = $dl->find('dd', 0)->plaintext;
                     break;
                 case '兵種' :
                     $this->warrior = $dl->find('dd', 0)->plaintext;
@@ -77,7 +90,7 @@ class Card {
                     break;
             }
         }
-        $card_names = split(' ', $this->card_name); 
+        $card_names = explode(' ', $this->card_name, 2); 
         $this->unit_name = $card_names[1];
 
         $this->skills = Array();
@@ -90,6 +103,67 @@ echo $dl;
         }
         $html->clear();
         unset($html);
+    }
+
+    public function save(){
+        // 取り込んだデータを保存する
+
+        // 武器
+        $arm_ids = Array();
+        foreach($this->arms as $arm_name){
+            $arm = Arm::find_or_create($arm_name);
+            $arm_ids = $arm['id'];
+        }
+
+        // タイプ
+        $type_ids = Array();
+        foreach($this->types as $type_name){
+            $type = Type::find_or_create($type_name);
+            $type_ids = $type['id'];
+        }
+
+        // シンボル
+        $symbol = Symbol::find_or_create($this->symbol);
+
+        // 性別
+        $sex = Sex::find_or_create($this->sex);
+
+        // 兵種
+        $warrior = Warrior::find_or_create($this->warrior);
+
+        // クラス
+        $unit_class = UnitClass::find_or_create($this->unit_class);
+
+        // レアリティ
+        $rarity = Rarity::find_or_create($this->rarity);
+
+        // イラストレーター
+        $illustrator = Illustrator::find_or_create($this->illustrator);
+
+        // ユニット名
+        $unit = Unit::find_or_create($this->unit_name);
+
+        // カード情報を保存
+        static::insert(
+            Array(
+                'name' => $this->card_name,
+                'name_kana' => $this->card_kana,
+                'flavor_text' => $this->flavor_text,
+                'unit_id' => $unit['id'],
+                'symbol_id' => $symbol['id'],
+                'rarity_id' => $rarity['id'],
+                'expansion_id' => 1, // 仮
+                'card_no' => $this->card_no,
+                'illustrator_id' => $illustrator['id'],
+                'attack_cost' => $this->attack_cost,
+                'classchange_cost' => $this->classchange_cost,
+                'attack' => $this->attack,
+                'status' => $this->status,
+                'sex_id' => $sex['id'],
+                'unit_class_id' => $unit_class['id'],
+                'warrior_id' => $warrior['id']
+            )
+        );
     }
 
     protected function str2int($var){
