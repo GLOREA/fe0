@@ -9,11 +9,10 @@ class CardListParser {
     }
 
     public function parse(){
-//        $this->card_list_parse();
+        $this->card_list_parse();
 
-        for($i = 32; $i <= $this->last_page_number; $i++){
+        for($i = 2; $i <= $this->last_page_number; $i++){
             $this->card_list_parse($i);
-break;
         }
     }
 
@@ -21,8 +20,8 @@ break;
         $html = $this->get_card_list_page($page_number);
         foreach($html->find('td[class=cell_img]') as $id => $td){
             $card = new Card($td->find('a', 0)->href, $td->find('img', 0)->src);
-            var_dump($card);
             $card->save();
+            var_dump($card->card_name);
         }
         $html->clear();
         unset($html);

@@ -40,9 +40,11 @@ class MasterBase {
             $exec_params[$symbol] = $val;
         }
 
-        return Database::exec(
+        Database::exec(
             'INSERT INTO `' . static::$table_name . '` (' . join(', ', $cols) . ') values (' . join(', ', $symbols) . ');',
             $exec_params
         );
+
+        return Database::last_insert_id();
     }
 }

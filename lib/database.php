@@ -123,11 +123,19 @@ class Database{
         return self::$db->execute($query, $params);
     }
 
+    static public function last_insert_id(){
+        return self::$db->lastInsertId();
+    }
+
     function __construct($init = false){
         // DB名とかは後で外から指定できるように修正する
         $this->pdo = new PDO('mysql:host=localhost;dbname=fe0', 'root', 'password');
 
         if($init){ $this->init(); }
+    }
+
+    function lastInsertId(){
+        return $this->pdo->lastInsertId();
     }
 
     public function execute($query, $params = Array(), $fetch_style = PDO::FETCH_ASSOC){
@@ -187,7 +195,8 @@ class Database{
             'types',
             'warriors',
             'units',
-            'image_urls'
+            'image_urls',
+            'icons'
         ));
 
         $this->create_table(
@@ -253,6 +262,7 @@ class Database{
                 ),
                 'name' => Array(
                     'varchar(128)',
+                    'DEFAULT \'Unknown\'',
                     'NOT NULL'
                 ),
                 'charactor' => Array(
@@ -711,6 +721,32 @@ class Database{
                 ),
                 'url' => Array(
                     'text',
+                    'NOT NULL'
+                )
+            ),
+            Array(
+                'primary key(`id`)'
+            )
+        );
+
+        $this->create_table(
+            'icons',
+            Array(
+                'id' => Array(
+                    'int(11)',
+                    'NOT NULL',
+                    'auto_increment'
+                ),
+                'name' => Array(
+                    'varchar(128)',
+                    'NOT NULL'
+                ),
+                'type' => Array(
+                    'varchar(16)',
+                    'NOT NULL'
+                ),
+                'regexp' => Array(
+                    'varchar(256)',
                     'NOT NULL'
                 )
             ),

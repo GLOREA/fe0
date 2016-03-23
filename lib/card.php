@@ -9,6 +9,7 @@ require_once dirname(__FILE__) . '/sex.php';
 require_once dirname(__FILE__) . '/unit_class.php';
 require_once dirname(__FILE__) . '/warrior.php';
 require_once dirname(__FILE__) . '/type.php';
+require_once dirname(__FILE__) . '/expansion.php';
 require_once dirname(__FILE__) . '/unit.php';
 
 class Card extends MasterBase  {
@@ -95,7 +96,6 @@ class Card extends MasterBase  {
 
         $this->skills = Array();
         foreach($html->find('div[class=skill]', 0)->find('dl') as $dl){
-echo $dl;
             $dds = $dl->find('dd');
             foreach($dl->find('dt') as $id => $dt){
                 $this->skills[] = new Skill($dt->innertext, $dds[$id]->innertext);
@@ -112,14 +112,20 @@ echo $dl;
         $arm_ids = Array();
         foreach($this->arms as $arm_name){
             $arm = Arm::find_or_create($arm_name);
-            $arm_ids = $arm['id'];
+            $arm_ids[] = $arm['id'];
         }
 
         // タイプ
         $type_ids = Array();
         foreach($this->types as $type_name){
             $type = Type::find_or_create($type_name);
-            $type_ids = $type['id'];
+            $type_ids[] = $type['id'];
+        }
+
+        // スキル
+        $skill_ids = Array();
+        foreach($this->skills as $skill){
+            $skill_ids[] = $skill->save();
         }
 
         // シンボル
@@ -143,8 +149,11 @@ echo $dl;
         // ユニット名
         $unit = Unit::find_or_create($this->unit_name);
 
+        // エキスパンション
+        $expansion = Expansion::find_or_create($this->expansion_name, $this->expansion_no);
+
         // カード情報を保存
-        static::insert(
+        $card_id = static::insert(
             Array(
                 'name' => $this->card_name,
                 'name_kana' => $this->card_kana,
@@ -152,7 +161,7 @@ echo $dl;
                 'unit_id' => $unit['id'],
                 'symbol_id' => $symbol['id'],
                 'rarity_id' => $rarity['id'],
-                'expansion_id' => 1, // 仮
+                'expansion_id' => $expansion['id'],
                 'card_no' => $this->card_no,
                 'illustrator_id' => $illustrator['id'],
                 'attack_cost' => $this->attack_cost,
@@ -164,6 +173,50 @@ echo $dl;
                 'warrior_id' => $warrior['id']
             )
         );
+
+        // 武器をひも付
+        foreach($arm_ids as $arm_id){
+            Database::exec(
+                'INSERT INTO `card_arms` (`card_id`, `arm_id`) VALUES(:card_id, :arm_id)',
+                Array(
+                    ':card_id' => $card_id,
+                    ':arm_id' => $arm_id
+                )
+            );
+        }
+
+        // タイプをひも付
+        foreach($type_ids as $type_id){
+            Database::exec(
+                'INSERT INTO `card_types` (`card_id`, `type_id`) VALUES(:card_id, :type_id)',
+                Array(
+                    ':card_id' => $card_id,
+                    ':type_id' => $type_id
+                )
+            );
+        }
+
+        // 射程をひも付
+        foreach($this->ranges as $range){
+            Database::exec(
+                'INSERT INTO `card_ranges` (`card_id`, `range`) VALUES(:card_id, :range)',
+                Array(
+                    ':card_id' => $card_id,
+                    ':range' => $range
+                )
+            );
+        }
+
+        // スキルをひも付
+        foreach($skill_ids as $skill_id){
+            Database::exec(
+                'INSERT INTO `card_skills` (`card_id`, `skill_id`) VALUES(:card_id, :skill_id)',
+                Array(
+                    ':card_id' => $card_id,
+                    ':skill_id' => $skill_id
+                )
+            );
+        }
     }
 
     protected function str2int($var){

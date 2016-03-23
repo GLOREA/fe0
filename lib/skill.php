@@ -1,11 +1,69 @@
 <?php
-class Skill {
+require_once dirname(__FILE__) . '/skill_type.php';
+require_once dirname(__FILE__) . '/skill_sub_type.php';
+
+class Skill extends MasterBase {
+    static protected $table_name = 'skills';
+    static protected $find_key = 'name';
+    static protected $cache = null;
+
     function __construct($name, $text){
         $this->type = null;
         $this->cost = null;
+        $this->effect = null;
         $this->sub_types = Array();
         $this->set_skill_name($name);
         $this->set_skill($text);
+    }
+
+    public function save(){
+        // 取り込んだデータを保存する
+
+        // タイプ
+        $type = SkillType::find_or_create($this->type);
+
+        // サブタイプ
+        $sub_type_ids = Array();
+        foreach($this->sub_types as $sub_type_name){
+            $sub_type = SkillSubType::find_or_create($sub_type_name);
+            $sub_type_ids[] = $sub_type['id'];
+        }
+
+        // 同一の情報が記録されてるか検索して、あれば保存しない
+        $select = Database::exec(
+            'SELECT * FROM `' . static::$table_name . '` WHERE `skill_type_id` = :skill_type_id AND `cost` = :cost AND `name` = :name AND `effect` = :effect',
+            Array(
+                ':skill_type_id' => $type['id'],
+                ':cost' => $this->cost,
+                ':name' => $this->name,
+                ':effect' => $this->effect
+            )
+        );
+        if(isset($select[0])) { return $select[0]['id']; }
+
+        // カード情報を保存
+        $skill_id = static::insert(
+            Array(
+                'skill_type_id' => $type['id'],
+                'cost' => $this->cost,
+                'name' => $this->name,
+                'effect' => $this->effect,
+                'level' => (isset($this->level) ? $this->level : null)
+            )
+        );
+
+        // サブタイプをひも付
+        foreach($sub_type_ids as $sub_type_id){
+            Database::exec(
+                'INSERT INTO `skill_skill_sub_types` (`skill_id`, `skill_sub_type_id`) VALUES(:skill_id, :skill_sub_type_id)',
+                Array(
+                    ':skill_id' => $skill_id,
+                    ':skill_sub_type_id' => $sub_type_id
+                )
+            );
+        }
+
+        return $skill_id;
     }
 
     protected function set_skill_name($text){
@@ -61,6 +119,9 @@ class Skill {
             switch($match[4]) {
                 case 'ccs' :
                     $this->sub_types[] = 'ClassChange';
+                    break;
+                case 'fs' :
+                    $this->sub_types[] = 'FormationSkill';
                     break;
                 case 'cf' :
                     $this->sub_types[] = 'CarnageForm';
