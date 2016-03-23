@@ -25,8 +25,8 @@ class Card {
         $expansion_name = split(' ', $card_status->find('td[class=card_records]', 0)->plaintext);
         $this->expansion_name = $expansion_name[1];
         $card_no = split('-', $card_status->find('td[class=card_no]', 0)->plaintext);
-        $this->expansion_no = $card_no[1];
-        $this->card_no = $this->str2int($card_no[0]);
+        $this->expansion_no = $card_no[0];
+        $this->card_no = $this->str2int($card_no[1]);
 
         $illustrator = split('：', $html->find('p[class=illustrator]', 0)->plaintext);
         $this->illustrator = $illustrator[1];

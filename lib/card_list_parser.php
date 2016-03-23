@@ -11,7 +11,7 @@ class CardListParser {
     public function parse(){
 //        $this->card_list_parse();
 
-        for($i = 4; $i <= $this->last_page_number; $i++){
+        for($i = 32; $i <= $this->last_page_number; $i++){
             $this->card_list_parse($i);
 break;
         }
