@@ -120,6 +120,7 @@ class Database{
     }
 
     static public function exec($query, $params = Array()){
+        if(!isset(self::$db)){ self::$db = new self(false); }
         return self::$db->execute($query, $params);
     }
 
@@ -757,4 +758,4 @@ class Database{
     }
 }
 
-Database::get_pdo(true);
+// Database::get_pdo(true);

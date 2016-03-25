@@ -47,6 +47,6 @@ class CardListParser {
     }
 }
 
-$test = new CardListParser();
-$test->parse();
-    // print( file_get_contents());
+// $test = new CardListParser();
+// $test->parse();
+// print( file_get_contents());

@@ -30,15 +30,24 @@ class Skill extends MasterBase {
         }
 
         // 同一の情報が記録されてるか検索して、あれば保存しない
-        $select = Database::exec(
-            'SELECT * FROM `' . static::$table_name . '` WHERE `skill_type_id` = :skill_type_id AND `cost` = :cost AND `name` = :name AND `effect` = :effect',
-            Array(
+        if(empty($this->cost)){
+            $query = 'SELECT * FROM `' . static::$table_name . '` WHERE `skill_type_id` = :skill_type_id AND IS NULL `cost` AND `name` = :name AND `effect` = :effect';
+            $params = Array(
+                ':skill_type_id' => $type['id'],
+                ':name' => $this->name,
+                ':effect' => $this->effect
+            );
+        }else{
+            $query = 'SELECT * FROM `' . static::$table_name . '` WHERE `skill_type_id` = :skill_type_id AND `cost` = :cost AND `name` = :name AND `effect` = :effect';
+            $params = Array(
                 ':skill_type_id' => $type['id'],
                 ':cost' => $this->cost,
                 ':name' => $this->name,
                 ':effect' => $this->effect
-            )
-        );
+            );
+        }
+
+        $select = Database::exec($query, $params);
         if(isset($select[0])) { return $select[0]['id']; }
 
         // カード情報を保存
